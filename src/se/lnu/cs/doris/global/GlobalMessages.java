@@ -70,6 +70,6 @@ public class GlobalMessages {
 	 */
 	public static void somethingWentWrong(String message) {
 		System.out.println("Oups, something went wrong!");
-		System.out.format("Error message:\n%s", message);
+		System.out.format("Error message:\n%s\n", message);
 	}
 }

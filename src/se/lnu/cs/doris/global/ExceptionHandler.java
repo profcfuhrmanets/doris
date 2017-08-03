@@ -32,6 +32,7 @@ public class ExceptionHandler {
 			GlobalMessages.outOfSpace(oos.getCommit());
 		} else {
 			GlobalMessages.somethingWentWrong(e.getMessage());
+			e.printStackTrace();
 		}
 
 		Runtime.getRuntime().halt(0);

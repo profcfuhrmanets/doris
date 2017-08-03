@@ -10,6 +10,7 @@ import se.lnu.cs.doris.git.GitParameters;
 //This package in added to show how to include external
 //packages to Doris.
 import com.gingerswede.source.metrics.SLOC;
+import se.lnu.cs.doris.metrics.MSEConverter;
 
 /**
  * 
@@ -40,7 +41,8 @@ public class Main {
 	public static void main(String[] args) {
 		String target = null, uri = null,  projectPath = null, projectName = null, cwd = System.getProperty("user.dir");
 		String[] metricsFiles = null;
-		Boolean metrics = false;
+		Boolean metrics = false;  // TODO don't make this hard-coded
+		Boolean jdt2famix = true;  // TODO don't make this hard-coded
 		GitParameters parameters = new GitParameters();
 		
 		
@@ -72,6 +74,7 @@ public class Main {
 				
 				//Example of how to add "hooked" parameters.
 				metricsFiles = (metrics) ? Flags.getMetricsFiles(args) : null;
+				System.out.println("metricsFiles = " + metricsFiles);
 			}
 
 			if (Flags.validateUri(parameters.getUri())) { // Check if the URI is valid.
@@ -95,7 +98,7 @@ public class Main {
 									+ projectName
 									+ "\n(This may take a while, go grab a cup of coffee)");
 
-					gr.mine();
+					gr.mine();   // TODO rename this method -- it's not really mining as much as recursively checking out from the .git into separate directories
 
 					gr = null;
 
@@ -115,6 +118,11 @@ public class Main {
 						System.out
 								.println("Metrics generated, cvs file can be found in:\n"
 										+ projectPath);
+					}
+					if (jdt2famix) {
+						System.out.println("Generating MSE files for each commit.");
+						MSEConverter mseConverter = new MSEConverter(projectPath, projectName);
+						mseConverter.generateMSEFiles();
 					}
 
 				} catch (Exception e) {

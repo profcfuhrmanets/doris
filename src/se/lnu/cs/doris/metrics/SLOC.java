@@ -1,9 +1,5 @@
 package se.lnu.cs.doris.metrics;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -13,8 +9,11 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-
 import se.lnu.cs.doris.global.Utilities;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 
 /**
  * This file is a part of Doris

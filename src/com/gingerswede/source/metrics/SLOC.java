@@ -7,7 +7,13 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Arrays;
+import java.util.List;
 
+import org.supercsv.cellprocessor.ift.CellProcessor;
+import org.supercsv.io.CsvListWriter;
+import org.supercsv.io.ICsvListWriter;
+import org.supercsv.prefs.CsvPreference;
 import se.lnu.cs.doris.global.Utilities;
 
 /**
@@ -55,83 +61,108 @@ public class SLOC {
 		
 		File csvFile = new File(this.m_mainDir, this.m_projectName + ".csv");
 
-		for (File f : this.m_mainDir.listFiles()) {
-			if (f.isDirectory() && !f.getName().contains(this.m_avoid)) {
+		final String[] header = new String[] {"Commit number", "Base value", "Total lines", "Lines of source code", "Lines of comments"};
+		List<Object> entry;
 
-				int commitNumber = Utilities.parseInt(f.getName());
-				int slocd = 0;
-				int slocmt = 0;
-				int sloct = 0;
+		ICsvListWriter listWriter = null;
+		try {
+			listWriter = new CsvListWriter(new FileWriter(csvFile),
+					CsvPreference.STANDARD_PREFERENCE);
 
-				for (File sd : f.listFiles()) {
-					if (!sd.getName().toLowerCase().contains(this.m_avoid)) {
-						slocd += this.countLines(sd, false);
-						slocmt += this.countLines(sd, true);
-						sloct += slocd + slocmt;
+			listWriter.writeHeader(header);
+
+			for (File f : this.m_mainDir.listFiles()) {
+				if (f.isDirectory() && !f.getName().contains(this.m_avoid)) {
+
+					int commitNumber = Utilities.parseInt(f.getName());
+					int slocd = 0;
+					int slocmt = 0;
+					int sloct = 0;
+
+					for (File sd : f.listFiles()) {
+						if (!sd.getName().toLowerCase().contains(this.m_avoid)) {
+							slocd += this.countLines(sd, false);
+							slocmt += this.countLines(sd, true);
+							sloct += slocd + slocmt;
+						}
 					}
-				}
 
-				if (this.m_baseValueTotal < 0) {
-					this.m_baseValueTotal = sloct;
-					this.m_baseValueComments = slocmt;
-					this.m_baseValueCode = slocd;
+					if (this.m_baseValueTotal < 0) {
+						this.m_baseValueTotal = sloct;
+						this.m_baseValueComments = slocmt;
+						this.m_baseValueCode = slocd;
 
-					sloct = 100;
-					slocmt = 100;
-					slocd = 100;
-				} else {
-					sloct = (int) ((double) sloct
-							/ (double) this.m_baseValueTotal * 100);
-					slocmt = (int) ((double) slocmt
-							/ (double) this.m_baseValueComments * 100);
-					slocd = (int) ((double) slocd
-							/ (double) this.m_baseValueCode * 100);
+						sloct = 100;
+						slocmt = 100;
+						slocd = 100;
+					} else {
+						sloct = (int) ((double) sloct
+								/ (double) this.m_baseValueTotal * 100);
+						slocmt = (int) ((double) slocmt
+								/ (double) this.m_baseValueComments * 100);
+						slocd = (int) ((double) slocd
+								/ (double) this.m_baseValueCode * 100);
+					}
+
+					entry = Arrays.asList(new Object[] {String.format("%d", commitNumber), "100", String.format("%s",sloct), String.format("%s",slocd), String.format("%s",slocmt) });
+					listWriter.write(entry);
+//				String appendString = String.format("%d;100;%s;%s;%s\n", commitNumber, sloct, slocd, slocmt);
+//					this.appendString(appendString, csvFile);
+					// System.out.println(appendString);
 				}
-				
-				String appendString = String.format("%d;100;%s;%s;%s\n", commitNumber, sloct, slocd, slocmt);
-				this.appendString(appendString, csvFile);
+			}
+
+		} finally {
+			if( listWriter != null ) {
+				listWriter.close();
 			}
 		}
+
 	}
 
-	private void appendString(String appendString, File csvFile) {
+	private void appendString(String appendString, File csvFile) throws IOException {
 		if (!csvFile.exists()) {
 			this.createCSVFile(csvFile);
 		}
-		
-		Writer writer = null;
+
+		Writer fw = null;
+		Writer writer;
 		
 		try {
-			writer = new BufferedWriter(new FileWriter(csvFile.getAbsolutePath(), true));
+			fw = new FileWriter(csvFile.getAbsolutePath(), true);
+			writer = new BufferedWriter(fw);
 			writer.append(appendString);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
-			try {
-				writer.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			if (fw!=null) {
+				fw.close();
 			}
+//			if (writer!=null) {
+//				writer.close();
+//			}
 		}
 	}
 
-	private void createCSVFile(File csvFile) {
+	private void createCSVFile(File csvFile) throws IOException {
+		Writer fw = null;
 		Writer writer = null;
 		try {
 			csvFile.createNewFile();
-			writer = new BufferedWriter(new FileWriter(csvFile.getAbsolutePath(), true));
+			fw = new FileWriter(csvFile.getAbsolutePath(), true);
+			writer = new BufferedWriter(fw);
 			writer.append("Commit number;Base value;Total lines;Lines of source code;Lines of comments\n");
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				writer.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			if (fw != null) {
+				fw.close();
 			}
+			// will also close wrapper?
+//			if (writer!=null) {
+//				writer.close();
+//			}
 		}
 	}
 

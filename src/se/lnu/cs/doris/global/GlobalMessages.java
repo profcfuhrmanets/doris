@@ -69,7 +69,7 @@ public class GlobalMessages {
 	 * @param message Error message.
 	 */
 	public static void somethingWentWrong(String message) {
-		System.out.println("Oups, something went wrong!");
-		System.out.format("Error message:\n%s\n", message);
+//		System.out.println("Oups, something went wrong!");
+		System.out.format("Oups, something went wrong!\nError message:\n%s\n", message);
 	}
 }

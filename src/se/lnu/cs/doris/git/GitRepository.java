@@ -377,6 +377,7 @@ public class GitRepository {
 		}
 		
 		private void cloneCommit() throws Exception {
+			System.out.println("cloneCommit(): " + m_target + ", " + m_name);
 			ObjectReader objectReader = m_headRepository.newObjectReader();
 			try {
 				File mineDir = new File(m_target, this.m_name);
@@ -391,6 +392,10 @@ public class GitRepository {
 				treeWalk.addTree(m_current.getTree());
 				
 				while (treeWalk.next()) {
+					if (treeWalk.getFileMode(0) == FileMode.GITLINK) {
+						System.out.println("Ignoring " + treeWalk.getPathString() + " because it's a GITLINK (submodule?)");
+						break;  // skip symlinks
+					}
 					String path = treeWalk.getPathString();
 					File file = new File(mineDir, path);
 					if (treeWalk.isSubtree()) {
@@ -399,9 +404,19 @@ public class GitRepository {
 					} else {
 						FileOutputStream outputStream = new FileOutputStream(file);
 						ObjectId objectId = treeWalk.getObjectId(0);
-						ObjectLoader objectLoader = objectReader.open(objectId);
 						try {
+							ObjectLoader objectLoader = objectReader.open(objectId);
 							objectLoader.copyTo(outputStream);
+						}
+						catch (org.eclipse.jgit.errors.MissingObjectException e) {
+							System.out.println("cloneCommit: Caught exception in treeWalk");
+							System.out.println("cloneCommit: objectId is '" + objectId.toString() + "'");
+							System.out.println("treeWalk.getFileMode(0): '" + treeWalk.getFileMode(0) + "'");
+							System.out.println("This may be a link to another repo"); // TODO recognize links to other repos e.g.,
+						} catch (Exception e) {
+							System.out.println("cloneCommit: Caught exception in treeWalk");
+							e.printStackTrace();
+							throw e;
 						} finally {
 							outputStream.close();
 						}

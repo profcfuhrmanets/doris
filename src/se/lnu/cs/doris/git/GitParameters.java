@@ -110,6 +110,8 @@ public class GitParameters {
 				//NOTICE: This functionality have not been added yet. But the parameter exists.
 				//The parameter will do nothing in practice.
 				this.setBranch(Flags.getFlagValue(args, prefix + inputFlag.name()));
+			} else if (inputFlag == InputFlag.msedirs) {
+				// nothing to do for now
 			}
 		}
 	}

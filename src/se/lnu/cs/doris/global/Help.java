@@ -84,11 +84,14 @@ public class Help {
 			"be given as an integer (e.g., 6, 10, 600).";
 	private static String m_metric =
 			"Metric\n" +
-			"\t-m, --metric <file ending>\n" +
-			"Start a simple code metrics analysis tool that compare the percent\n" +
-			"of source lines of code, lines of comments and total lines in the\n" +
-			"repository.";
-	
+					"\t-m, --metric <filetype[,filetype,...]>\n" +
+					"Start a simple code metrics analysis tool that compare the percent\n" +
+					"of source lines of code, lines of comments and total lines in the\n" +
+					"repository, for the filetypes specified.";
+	private static String m_msedirs =
+			"Generate MSE files (requires jdt2famix)\n" +
+					"\t-msedirs <subdir1[,subdir2,...]>\n" +
+					"Run jdt2famix in each subdirectory dir1, etc.";
 	/**
 	 * Main method to filter out specific help through tags or
 	 * if tag is absent prints complete help.
@@ -138,6 +141,9 @@ public class Help {
 			case metric:
 				printMetricHelp();
 				break;
+			case msedirs:
+				printMSEDirsHelp();
+				break;
 			default: //If a topic can't be found.
 				printFullHelp();
 				break;
@@ -161,6 +167,7 @@ public class Help {
 		printEndPointHelp();
 		printLimitHelp();
 		printMetricHelp();
+		printMSEDirsHelp();
 	}
 
 	/**
@@ -226,4 +233,10 @@ public class Help {
 		System.out.println(m_metric);
 		System.out.println();
 	}
+
+	public static void printMSEDirsHelp() {
+		System.out.println(m_msedirs);
+		System.out.println();
+	}
+
 }

@@ -41,6 +41,7 @@ public class Main {
 	public static void main(String[] args) {
 		String target = null, uri = null,  projectPath = null, projectName = null, cwd = System.getProperty("user.dir");
 		String[] metricsFiles = null;
+		String[] mseDirs = null;
 		Boolean metrics = false;  // TODO don't make this hard-coded
 		Boolean jdt2famix = true;  // TODO don't make this hard-coded
 		GitParameters parameters = new GitParameters();
@@ -74,12 +75,17 @@ public class Main {
 				
 				//Example of how to add "hooked" parameters.
 				metricsFiles = (metrics) ? Flags.getMetricsFiles(args) : null;
-				System.out.println("metricsFiles = " + metricsFiles);
+				mseDirs = (jdt2famix) ? Flags.getMSEDirs(args) : null;
+				System.out.println("Generate MSE files for subdirectories: ");
+				for (String dir: mseDirs) {
+					System.out.print(dir + " ");
+				}
+				System.out.println();
 			}
 
 			if (Flags.validateUri(parameters.getUri())) { // Check if the URI is valid.
 
-				GitRepository gr = new GitRepository(
+				GitRepository gr =  new GitRepository(
 							parameters.getUri(),
 							parameters.getTarget(),
 							parameters.getBranch(),
@@ -121,7 +127,7 @@ public class Main {
 					}
 					if (jdt2famix) {
 						System.out.println("Generating MSE files for each commit.");
-						MSEConverter mseConverter = new MSEConverter(projectPath, projectName);
+						MSEConverter mseConverter = new MSEConverter(projectPath, projectName, mseDirs);
 						mseConverter.generateMSEFiles();
 					}
 

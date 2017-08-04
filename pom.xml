@@ -62,5 +62,11 @@
             <artifactId>org.eclipse.jgit</artifactId>
             <version>3.7.1.201504261725-r</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-simple -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.6.2</version>
+        </dependency>
     </dependencies>
 </project>

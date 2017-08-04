@@ -123,4 +123,19 @@ public class Flags {
 		
 		return files;
 	}
+	public static String[] getMSEDirs(String[] args) {
+		String[] files;
+		String metricFlag = getFlagValue(args, GlobalStrings.MSE_DIRS);
+
+		if (!metricFlag.startsWith("-")) {
+			if (metricFlag.contains(","))
+				files = metricFlag.split(",");
+			else
+				files = new String[] { metricFlag };
+		} else {
+			files = null;
+		}
+
+		return files;
+	}
 }

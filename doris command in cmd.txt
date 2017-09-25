@@ -4,4 +4,8 @@ Some commits within Rhino:
 java -Xmx3072m -jar c:\Users\fuhrm\workspace\doris\target\doris-1.0.0-jar-with-dependencies.jar -u https://github.com/mozilla/rhino.git -s 8ed54c8609e7d704b2f6d66592106094effdecab
 
 Some commits within Lucene-Java
-java -Xmx3072m -jar c:\Users\fuhrm\workspace\doris\target\doris-1.0.0-jar-with-dependencies.jar -u https://github.com/apache/lucene-solr.git -s b1a65c8f5572004cabc2b8d5548bf07f22fd2b3e
+java -Xmx3072m -jar c:\Users\fuhrm\workspace\doris\target\doris-1.0.0-jar-with-dependencies.jar -u https://github.com/apache/lucene-solr.git -s b1a65c8f5572004cabc2b8d5548bf07f22fd2b3e -msefiles .
+
+PS C:\Users\fuhrm\Documents\doristest> java -Xmx3072m -jar c:\Users\fuhrm\workspace\doris\target\doris-1.0.0-jar-with-de
+pendencies.jar -u file://c:/Users/fuhrm/argouml-svn.git -s fe3dc277164b5dd0db00744bd09b3f90a57aae27 -e 2eb82be9b5c21c7f3
+c97f67f26100513689fb56d -msedirs src_new

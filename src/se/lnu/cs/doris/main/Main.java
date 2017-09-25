@@ -76,11 +76,13 @@ public class Main {
 				//Example of how to add "hooked" parameters.
 				metricsFiles = (metrics) ? Flags.getMetricsFiles(args) : null;
 				mseDirs = (jdt2famix) ? Flags.getMSEDirs(args) : null;
-				System.out.println("Generate MSE files for subdirectories: ");
-				for (String dir: mseDirs) {
-					System.out.print(dir + " ");
+				if (mseDirs != null) {
+					System.out.println("Generate MSE files for subdirectories: ");
+					for (String dir : mseDirs) {
+						System.out.print(dir + " ");
+					}
+					System.out.println();
 				}
-				System.out.println();
 			}
 
 			if (Flags.validateUri(parameters.getUri())) { // Check if the URI is valid.
@@ -92,7 +94,8 @@ public class Main {
 							parameters.getStartPoint(),
 							parameters.getEndPoint(),
 							parameters.getLimit(),
-							parameters.getLogStatus()
+							parameters.getLogStatus(),
+						    parameters.getShaSet()
 						);
 				try {
 
@@ -102,7 +105,7 @@ public class Main {
 					System.out
 							.println("Initializing mining of "
 									+ projectName
-									+ "\n(This may take a while, go grab a cup of coffee)");
+									+ "\n(This could take a while; go grab a cup of coffee)");
 
 					gr.mine();   // TODO rename this method -- it's not really mining as much as recursively checking out from the .git into separate directories
 

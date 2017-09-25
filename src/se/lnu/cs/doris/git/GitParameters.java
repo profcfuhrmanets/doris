@@ -5,6 +5,12 @@ import se.lnu.cs.doris.global.InputFlag;
 import se.lnu.cs.doris.global.Utilities;
 import se.lnu.cs.doris.main.Flags;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 /**
  * Class to create an abstract layer of the different parameters used by GitRepository.
  * @author Emil Carlsson
@@ -33,6 +39,7 @@ public class GitParameters {
 	private String m_endPoint = null;
 	private int m_limit = 0;
 	private Boolean m_noLog = false;
+	private Set<String> m_shaSet;
 	
 	/**
 	 * Empty constructor.
@@ -52,7 +59,7 @@ public class GitParameters {
 	 * @param args Arguments following the flag convention for Doris.
 	 * @throws Exception
 	 */
-	public GitParameters(String[] args) {
+	public GitParameters(String[] args) throws IOException {
 		if (args != null) {
 			this.populate(args);
 		}
@@ -64,7 +71,7 @@ public class GitParameters {
 	 * @param args Arguments following the flag convention for Doris.
 	 * @throws Exception
 	 */
-	public void populate(String[] args) {
+	public void populate(String[] args) throws IOException {
 		this.populate(Flags.getFlags(args), args);
 	}
 	
@@ -74,7 +81,7 @@ public class GitParameters {
 	 * @param args Arguments matching the flag convention for Doris.
 	 * @throws Exception
 	 */
-	public void populate(String[] flags, String[] args)  {
+	public void populate(String[] flags, String[] args) throws IOException {
 		for (String flag : flags) {
 			
 			InputFlag inputFlag = null;
@@ -112,6 +119,19 @@ public class GitParameters {
 				this.setBranch(Flags.getFlagValue(args, prefix + inputFlag.name()));
 			} else if (inputFlag == InputFlag.msedirs) {
 				// nothing to do for now
+			} else if (inputFlag == InputFlag.shafile) {
+				// Load SHAs from a file into a set of strings
+				try (BufferedReader shaReader = new BufferedReader(new FileReader(Flags.getSHAFileName(args)))) {
+					Set<String> lines = new LinkedHashSet<String>();
+					String line;
+
+					while ((line = shaReader.readLine()) != null) {
+						lines.add(line);
+						System.out.println("Reading SHA: " + line);
+					}
+					shaReader.close();
+					m_shaSet = lines;
+				}
 			}
 		}
 	}
@@ -169,4 +189,6 @@ public class GitParameters {
 	public void setBranch(String branch) {
 		this.m_branch = branch;
 	}
+
+	public Set<String> getShaSet() { return this.m_shaSet; }
 }

@@ -23,5 +23,5 @@ package se.lnu.cs.doris.global;
  *
  */
 public enum InputFlag {
-	h, help, t, target, u, uri, n, nolog, s, startpoint, e, endpoint, l, limit, m, metric, msedirs, b, branch
+	h, help, t, target, u, uri, n, nolog, s, startpoint, e, endpoint, l, limit, m, metric, msedirs, shafile, b, branch
 }

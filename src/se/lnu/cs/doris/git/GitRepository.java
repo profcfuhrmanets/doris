@@ -3,6 +3,7 @@ package se.lnu.cs.doris.git;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.AnyObjectId;
@@ -60,6 +61,8 @@ public class GitRepository {
 	private String m_endPoint;
 	private String m_branch;
 	private Boolean m_noLog;
+	private Set<String> m_shaSet;
+
 	private int m_limit;
 
 	//Strings
@@ -70,7 +73,7 @@ public class GitRepository {
 	 * @param uri URI to the git repository's .git file.
 	 */
 	public GitRepository(String uri) {		
-		this(uri, null, null, null, null, 0, false);
+		this(uri, null, null, null, null, 0, false, null);
 	}
 
 	/**
@@ -79,7 +82,7 @@ public class GitRepository {
 	 * @param target Path to target directory.
 	 */
 	public GitRepository(String uri, String target) {
-		this(uri, target, null, null, null, 0, false);
+		this(uri, target, null, null, null, 0, false, null);
 	}
 
 	/**
@@ -89,7 +92,7 @@ public class GitRepository {
 	 * @param branch Name of the branch to pull.
 	 */
 	public GitRepository(String uri, String target, String branch) {
-		this(uri, target, branch, null, null, 0, false);
+		this(uri, target, branch, null, null, 0, false, null);
 	}
 
 	/**
@@ -99,7 +102,7 @@ public class GitRepository {
 	 * @param startPoint SHA-1 checksum of the commit that is the starting point.
 	 */
 	public GitRepository(String uri, String target, String branch, String startPoint) {
-		this(uri, target, branch, startPoint, null, 0, false);
+		this(uri, target, branch, startPoint, null, 0, false, null);
 	}
 
 	/**
@@ -111,7 +114,7 @@ public class GitRepository {
 	 */
 	public GitRepository(String uri, String target, String branch, String startPoint,
 			String endPoint) {
-		this(uri, target, branch, startPoint, endPoint, 0, false);
+		this(uri, target, branch, startPoint, endPoint, 0, false, null);
 	}
 
 	/**
@@ -124,7 +127,7 @@ public class GitRepository {
 	 */
 	public GitRepository(String uri, String target, String branch, String startPoint,
 			String endPoint, int limit) {
-		this(uri, target, branch, startPoint, endPoint, limit, false);
+		this(uri, target, branch, startPoint, endPoint, limit, false, null);
 	}
 	
 	public GitRepository(GitParameters params) {
@@ -141,7 +144,7 @@ public class GitRepository {
 	 * @param noLog Boolean to set if a meta-data log should be created or not.
 	 */
 	public GitRepository(String uri, String target, String branch, String startPoint,
-			String endPoint, int limit, Boolean noLog) {
+			String endPoint, int limit, Boolean noLog, Set<String> shaSet) {
 		//TODO: Refactor this constructor.
 		//Get repository name.
 		this.m_repoName = this.getRepoNameFromUri(uri);
@@ -174,6 +177,8 @@ public class GitRepository {
 
 		//Set head repository to null.
 		this.m_headRepository = null;
+
+		this.m_shaSet = shaSet;
 	}
 
 	/**
@@ -225,59 +230,55 @@ public class GitRepository {
 			Iterator<RevCommit> revs = rw.iterator();
 			
 			RevCommit current = rw.parseCommit(revs.next());
+			// if start but no end, then only do one iteration
 			Boolean startFound = this.m_startPoint == null,
-					stopFound = false,
+					singleIteration = (this.m_startPoint != null) && (this.m_endPoint == null),
+					isRange = this.m_shaSet == null,
 					checkLimit = this.m_limit != 0;
 			int limit = 0;
+			System.out.println("isRange = " + isRange);
+			if (!isRange) System.out.println("shaSet = " + m_shaSet);
 
 			while (true) {
-				if (!stopFound && this.m_endPoint != null) {
-					if (current.getName().toLowerCase().equals(this.m_endPoint.toLowerCase())) {
+				if (isRange) {
+					// stop if limit reached
+					if (checkLimit && this.m_limit <= limit) {
+						waitThreads();
 						GlobalMessages.miningDone(this.m_repoName);
 						break;
 					}
-				} 
-				if (checkLimit && this.m_limit <= limit) {
-					GlobalMessages.miningDone(this.m_repoName);
-					break;
-				} 
-				if (!startFound) {
-					if (current.getName().toLowerCase().equals(this.m_startPoint.toLowerCase())) {
-						startFound = true;
+					// stop if found end
+					if (this.m_endPoint != null) {
+						if (current.getName().toLowerCase().equals(this.m_endPoint.toLowerCase())) {
+							waitThreads();
+							GlobalMessages.miningDone(this.m_repoName);
+							break;
+						}
+					}
+					// detect the start of a range
+					if (!startFound) {
+						if (current.getName().toLowerCase().equals(this.m_startPoint.toLowerCase())) {
+							startFound = true;
+						}
+					}
+					// if inside the range
+					if (startFound) {
+						startCloner(i, current);
+						limit++;
 					}
 				}
-				if (startFound) {
-					//Should work, but not the most beautiful solution.
-					while (this.m_runningThreads > MAX_NUMBER_OF_THREADS) {
-						try {
-							wait();
-						} catch (Exception e) {}
+				else {
+					if (m_shaSet.contains(current.getName().toLowerCase())) {
+						System.out.println("Found SHA " + current.getName().toLowerCase());
+						startCloner(i, current);
+						limit++;
 					}
-					String name = Integer.toString(i);
-					File file = new File(this.m_target + "/" + name);
-
-					//If the commit already have been mined we remove it in case it's
-					//an older version or another program.
-					if (file.exists()) {
-						Utilities.deleteDirectory(file);
-					}					
-					
-					new Cloner(current, name, i);
-
-					if (!this.m_noLog) {
-						GitLogger.addNode(this.m_target, this.m_repoName, name, current);
-					}
-					this.m_runningThreads++;
-					limit++;
 				}
-				if (revs.hasNext()) {
+				if (revs.hasNext() && (!singleIteration || !startFound)) {
 					current = rw.parseCommit(revs.next());
 					i++;
 				} else {
-					//Ugly but working to clean up after multiple threads.
-					while (this.m_runningThreads > 0) {
-						Thread.sleep(200);
-					}
+					waitThreads();
 					GlobalMessages.miningDone(this.m_repoName);
 					break;
 				}
@@ -289,6 +290,45 @@ public class GitRepository {
 		if (this.m_headRepository != null) {
 			this.m_headRepository.close();
 		}
+	}
+
+	private void startCloner(int i, RevCommit current) throws Exception {
+		//Should work, but not the most beautiful solution.
+		Object monitor = this;
+		while (this.m_runningThreads > MAX_NUMBER_OF_THREADS) {
+			synchronized (monitor) {
+				try {
+					monitor.wait();
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.exit(-1);
+				}
+			}
+		}
+		String name = Integer.toString(i);
+		File file = new File(this.m_target + "/" + name);
+
+		//If the commit already have been mined we remove it in case it's
+		//an older version or another program.
+		if (file.exists()) {
+            Utilities.deleteDirectory(file);
+        }
+
+		this.m_runningThreads++;
+
+		new Cloner(current, name, i, monitor);
+
+		if (!this.m_noLog) {
+            GitLogger.addNode(this.m_target, this.m_repoName, name, current);
+        }
+	}
+
+	private void waitThreads() throws InterruptedException {
+		//Ugly but working to clean up after multiple threads.
+		while (this.m_runningThreads > 0) {
+            //System.out.println("m_runningThreads = " + this.m_runningThreads);
+            Thread.sleep(200);
+        }
 	}
 
 	/**
@@ -367,11 +407,13 @@ public class GitRepository {
 		private int m_i;
 		private RevCommit m_current;
 		private Thread m_thread;
+		private Object m_monitor;
 
-		public Cloner(RevCommit current, String name, int i) throws Exception {	    
+		public Cloner(RevCommit current, String name, int i, Object monitor) throws Exception {
 			this.m_current = current;
 			this.m_name = name;
 			this.m_i = i;
+			this.m_monitor = monitor;
 			this.m_thread = new Thread(this);
 			this.m_thread.start();
 		}
@@ -402,9 +444,10 @@ public class GitRepository {
 						file.mkdir();
 						treeWalk.enterSubtree();
 					} else {
-						FileOutputStream outputStream = new FileOutputStream(file);
+						FileOutputStream outputStream = null;
 						ObjectId objectId = treeWalk.getObjectId(0);
 						try {
+							outputStream = new FileOutputStream(file);
 							ObjectLoader objectLoader = objectReader.open(objectId);
 							objectLoader.copyTo(outputStream);
 						}
@@ -418,7 +461,7 @@ public class GitRepository {
 							e.printStackTrace();
 							throw e;
 						} finally {
-							outputStream.close();
+							if (outputStream != null) outputStream.close();
 						}
 
 						if (FileMode.EXECUTABLE_FILE.equals(treeWalk.getRawMode(0))) {
@@ -428,9 +471,8 @@ public class GitRepository {
 				}
 				
 				GlobalMessages.commitPulled(this.m_i, this.m_current.getName());
-				
 				m_runningThreads--;
-				
+
 			} catch (Exception e) {
 				errorHandlingMining(e, this.m_current);
 			} finally {
@@ -444,18 +486,21 @@ public class GitRepository {
 			this.guardedCloner();
 		}
 		
-		public synchronized void guardedCloner() {
+		public void guardedCloner() {
 
-			try {
-				this.cloneCommit();
-			} catch (Exception e) {
-				if (e.getMessage().contains("not enough space")) {
-					ExceptionHandler.HandleException(new OutOfSpaceException(e.getMessage(), (this.m_current != null ? this.m_current.getName() : "Initial commit")));
-				} else {
-					ExceptionHandler.HandleException(e);
+			synchronized (this.m_monitor) {
+				try {
+					this.cloneCommit();
+				} catch (Exception e) {
+					if (e.getMessage().contains("not enough space")) {
+						ExceptionHandler.HandleException(new OutOfSpaceException(e.getMessage(), (this.m_current != null ? this.m_current.getName() : "Initial commit")));
+					} else {
+						ExceptionHandler.HandleException(e);
+					}
 				}
+				// in case waiting for threads to finish
+				this.m_monitor.notifyAll();
 			}
-			notifyAll();
 		}
 	}
 }

@@ -1,5 +1,7 @@
 package se.lnu.cs.doris.main;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.regex.Pattern;
@@ -125,17 +127,26 @@ public class Flags {
 	}
 	public static String[] getMSEDirs(String[] args) {
 		String[] files;
-		String metricFlag = getFlagValue(args, GlobalStrings.MSE_DIRS);
+		String mseFlag = getFlagValue(args, GlobalStrings.MSE_DIRS);
 
-		if (!metricFlag.startsWith("-")) {
-			if (metricFlag.contains(","))
-				files = metricFlag.split(",");
+		if ((mseFlag != null) && !mseFlag.startsWith("-")) {
+			if (mseFlag.contains(","))
+				files = mseFlag.split(",");
 			else
-				files = new String[] { metricFlag };
+				files = new String[] { mseFlag };
 		} else {
 			files = null;
 		}
 
 		return files;
+	}
+
+	public static String getSHAFileName(String[] args) throws FileNotFoundException {
+		String filePath = getFlagValue(args, GlobalStrings.SHA_FILE);
+		File f = new File(filePath);
+		if(!f.exists()) {
+			throw new FileNotFoundException(filePath);
+		}
+		return filePath;
 	}
 }

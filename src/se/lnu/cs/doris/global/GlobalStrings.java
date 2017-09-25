@@ -56,4 +56,5 @@ public class GlobalStrings {
 	public static String MEASURE_SLOC_SHORT = "-m";
 	public static String MEASURE_SLOC_LONG = "--metric";
 	public static final String MSE_DIRS = "-msedirs";
+	public static final String SHA_FILE = "-shafile";
 }

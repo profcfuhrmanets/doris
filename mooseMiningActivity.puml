@@ -8,7 +8,7 @@ start
 from subset of commits
 in a Git repo;
 
-|jdt2famix|
+|#lightgreen|jdt2famix|
 :Directory tree of commits, 
 e.g., ./0/, ./1/, etc.]
 :Create MSE file for 
@@ -17,6 +17,9 @@ each commit, e.g.,
 
 |MOOSE/Pharo|
 :Analyse MSE files;
+
+|Git bash|
+:Calculate churn;
 
 |Emprical study|
 :Data from analysis]
